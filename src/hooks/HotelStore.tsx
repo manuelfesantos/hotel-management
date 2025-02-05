@@ -30,12 +30,14 @@ interface Room {
   id: string;
   spaces: Space[];
   type: "Quarto";
+  name: string;
 }
 
 interface Floor {
   id: string;
   rooms: Room[];
   type: "Piso";
+  name?: string;
 }
 
 interface Hotel {
@@ -75,6 +77,7 @@ export const useHotelStore = create(
                 id: (state.hotel.floors.length + 1).toString(),
                 rooms: [],
                 type: "Piso",
+                name: `Piso ${(state.hotel.floors.length + 1).toString()}`,
               },
             ],
           },
@@ -96,6 +99,11 @@ export const useHotelStore = create(
                           (floor.rooms.length + 1),
                         spaces: [],
                         type: "Quarto",
+                        name: `Quarto ${
+                          floorId +
+                          (floor.rooms.length + 1 > 9 ? "" : "0") +
+                          (floor.rooms.length + 1)
+                        }`,
                       },
                     ],
                   }

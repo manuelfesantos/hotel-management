@@ -149,11 +149,9 @@ export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
             Estrutura de Máquinas do Hotel
           </h1>
           <div className={"h-[50px]"} />
-          <div className={"flex flex-col gap-6 items-center"}>
-            {hotel.floors.map((floor, index) =>
-              renderNode(floor, 0, index === hotel.floors.length - 1),
-            )}
-          </div>
+          {hotel.floors.map((floor, index) =>
+            renderNode(floor, 0, index === hotel.floors.length - 1),
+          )}
         </div>
       </div>
 
