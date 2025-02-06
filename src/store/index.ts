@@ -406,7 +406,12 @@ export const useHotelStore = create(
 );
 
 const getNewRoomId = (floor: Floor) =>
-  Math.max(...floor.rooms.map((r) => +r.id), Number(floor.id) * 100) + 1 + "";
+  Math.max(
+    ...floor.rooms.filter(instanceOfRoom).map((r) => +r.id),
+    Number(floor.id) * 100,
+  ) +
+  1 +
+  "";
 
 const getNewFloorId = (hotel: Hotel) =>
   Math.max(...hotel.floors.map((f) => +f.id), 0) + 1 + "";
