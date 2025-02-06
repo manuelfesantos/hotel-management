@@ -43,12 +43,14 @@ const TreeNode = ({ node }: TreeNodeProps) => {
           <div className="w-px h-6 bg-gray-500"></div>
 
           {/* Horizontal line connecting all children */}
-          <div className="w-full relative flex justify-center items-center">
-            <div className="absolute top-0 w-full h-px bg-gray-500"></div>
-          </div>
+          {childrenNodes.length > 1 && (
+            <div className="w-full relative flex justify-center items-center">
+              <div className="absolute top-0 w-full h-px bg-gray-500"></div>
+            </div>
+          )}
 
           {/* Row of children */}
-          <div className="flex justify-center gap-8 mt-2">
+          <div className="flex justify-center gap-8">
             {childrenNodes.map((child: any) => (
               <div
                 key={child.id}
