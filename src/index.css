@@ -1,13 +1,8 @@
 @import "tailwindcss";
 
-/** {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}*/
-
 body {
   font-family: 'Nunito', sans-serif;
+  @apply bg-gray-100 text-gray-800;
 }
 
 h1 {

@@ -55,7 +55,12 @@ export const Header = () => {
               className="hidden"
             />
           </label>
-          <Button onClick={() => setShowDeleteDialog(true)}>Limpar Tudo</Button>
+          <Button
+            onClick={() => setShowDeleteDialog(true)}
+            className={"bg-red-500 hover:bg-red-600"}
+          >
+            Limpar Tudo
+          </Button>
         </div>
       </header>
       {showTree && <TreeDiagram onClose={() => setShowTree(false)} />}

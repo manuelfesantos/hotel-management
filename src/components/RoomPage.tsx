@@ -4,9 +4,9 @@ import { Button } from "./Button.tsx";
 import { CardList } from "./CardList.tsx";
 import { PageLayout } from "./PageLayout.tsx";
 import { Header } from "./Header.tsx";
-import { DraggableCard } from "./DraggableCard.tsx";
-import { instanceOfMachine, instanceOfSpace } from "../utils";
+import { instanceOfMachine, instanceOfRoom, instanceOfSpace } from "../utils";
 import { ItemTypeEnum } from "../types";
+import { EntityCard } from "./EntityCard.tsx";
 
 export const RoomPage = () => {
   const { floorId, roomId } = useParams<{ floorId: string; roomId: string }>();
@@ -23,7 +23,7 @@ export const RoomPage = () => {
     .flatMap((floor) => floor.rooms)
     .find((room) => room.id === roomId);
 
-  if (!room) return <div>Room not found</div>;
+  if (!room || !instanceOfRoom(room)) return <div>Room not found</div>;
 
   const parentFloor = hotel.floors.find((floor) =>
     floor.rooms.some((room) => room.id === roomId),
@@ -36,7 +36,7 @@ export const RoomPage = () => {
   return (
     <PageLayout>
       <Header />
-      <div className="flex w-full items-center gap-4 mb-4 px-4">
+      <div className="flex w-full items-center gap-4 mb-4">
         {parentFloor && (
           <Link
             to={`/floors/${parentFloor.id}`}
@@ -78,7 +78,7 @@ export const RoomPage = () => {
       <CardList>
         {room.spaces.map((space, index) =>
           instanceOfSpace(space) ? (
-            <DraggableCard
+            <EntityCard
               type={ItemTypeEnum.SPACE}
               index={index}
               move={moveSpace}
@@ -93,7 +93,7 @@ export const RoomPage = () => {
               icon={"🗄"}
             />
           ) : (
-            <DraggableCard
+            <EntityCard
               index={index}
               move={moveSpace}
               onDelete={() => deleteSpace(space.id)}

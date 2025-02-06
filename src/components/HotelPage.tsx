@@ -3,8 +3,8 @@ import { Button } from "./Button.tsx";
 import { CardList } from "./CardList.tsx";
 import { PageLayout } from "./PageLayout.tsx";
 import { Header } from "./Header.tsx";
-import { DraggableCard } from "./DraggableCard.tsx";
 import { ItemTypeEnum } from "../types";
+import { EntityCard } from "./EntityCard.tsx";
 
 export const HotelPage = () => {
   const { hotel, addFloor, deleteFloor, updateFloorOrder, renameEntity } =
@@ -27,7 +27,7 @@ export const HotelPage = () => {
 
       <CardList>
         {hotel.floors.map((floor, index) => (
-          <DraggableCard
+          <EntityCard
             index={index}
             move={updateFloorOrder}
             onDelete={() => deleteFloor(floor.id)}

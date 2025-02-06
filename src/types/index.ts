@@ -29,7 +29,7 @@ export interface Room {
 
 export interface Floor {
   id: string;
-  rooms: Room[];
+  rooms: (Room | Machine)[];
   type: "Piso";
   name: string;
 }

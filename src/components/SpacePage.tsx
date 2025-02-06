@@ -4,9 +4,9 @@ import { Button } from "./Button.tsx";
 import { CardList } from "./CardList.tsx";
 import { PageLayout } from "./PageLayout.tsx";
 import { Header } from "./Header.tsx";
-import { DraggableCard } from "./DraggableCard.tsx";
 import { ItemTypeEnum } from "../types";
-import { instanceOfSpace } from "../utils";
+import { instanceOfRoom, instanceOfSpace } from "../utils";
+import { EntityCard } from "./EntityCard.tsx";
 
 export const SpacePage = () => {
   const { floorId, roomId, spaceId } = useParams<{
@@ -24,6 +24,7 @@ export const SpacePage = () => {
 
   const space = hotel.floors
     .flatMap((floor) => floor.rooms)
+    .filter(instanceOfRoom)
     .flatMap((room) => room.spaces)
     .find((space) => space.id === spaceId);
 
@@ -31,6 +32,7 @@ export const SpacePage = () => {
 
   const parentRoom = hotel.floors
     .flatMap((floor) => floor.rooms)
+    .filter(instanceOfRoom)
     .find((room) => room.spaces.some((space) => space.id === spaceId));
 
   const moveMachine = (fromIndex: number, toIndex: number) => {
@@ -67,18 +69,18 @@ export const SpacePage = () => {
 
       <CardList>
         {space.machines.map((machine, index) => (
-          <DraggableCard
-            move={moveMachine}
-            index={index}
-            type={ItemTypeEnum.MACHINE}
-            key={machine.id}
+          <EntityCard
             id={machine.id}
             name={machine.name}
-            to="" // Machines are leaf nodes
+            to={""}
             onDelete={() => deleteMachine(machine.id)}
             onRename={(newName) => renameEntity("machine", machine.id, newName)}
             icon={"⚙️"}
+            move={moveMachine}
+            index={index}
+            type={ItemTypeEnum.MACHINE}
           />
+          /**/
         ))}
       </CardList>
     </PageLayout>

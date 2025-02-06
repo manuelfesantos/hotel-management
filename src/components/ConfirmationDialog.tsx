@@ -1,3 +1,5 @@
+import { Button } from "./Button.tsx";
+
 interface ConfirmationDialogProps {
   isOpen: boolean;
   title: string;
@@ -21,18 +23,15 @@ export const ConfirmationDialog = ({
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="mb-4">{message}</p>
         <div className="flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
+          <Button onClick={onCancel} className="px-4 py-2 text-gray-600">
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={onConfirm}
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             Apagar
-          </button>
+          </Button>
         </div>
       </div>
     </div>

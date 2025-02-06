@@ -1,28 +1,35 @@
-import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmationDialog } from "./ConfirmationDialog.tsx";
 import { Button } from "./Button.tsx";
-import { Badge } from "./Badge.tsx";
+import { ItemType } from "../types";
+import { DraggableCard } from "./DraggableCard.tsx";
 
 interface EntityCardProps {
   id: string;
   name: string;
   to: string;
+  index: number;
   count?: number;
   itemName?: string;
   onDelete: () => void;
   onRename?: (newName: string) => void;
   icon: string;
+  move: (fromIndex: number, toIndex: number) => void;
+  type: ItemType;
 }
 
 export const EntityCard = ({
   name,
+  index,
   to,
+  type,
   onDelete,
   itemName,
   onRename,
   count,
   icon,
+  move,
+  id,
 }: EntityCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(name);
@@ -42,10 +49,10 @@ export const EntityCard = ({
 
   return (
     <>
-      <div
-        className={`relative w-full flex items-center justify-between bg-white p-4 shadow-sm rounded-md hover:shadow-md transition-all`}
-      >
-        {isEditing ? (
+      {isEditing ? (
+        <div
+          className={`relative w-full flex items-center justify-between bg-white p-4 shadow-sm rounded-md hover:shadow-md transition-all`}
+        >
           <div className="w-full flex gap-3 items-center bg-white">
             <input
               value={newName}
@@ -57,35 +64,25 @@ export const EntityCard = ({
             />
             <Button onClick={handleRename}>Guardar</Button>
           </div>
-        ) : (
-          <>
-            <div className="flex flex-col flex-1 pl-3">
-              <Link
-                to={to}
-                className="text-lg font-medium text-gray-900 hover:text-blue-600"
-              >
-                {icon} {name}
-              </Link>
-            </div>
-            {count !== undefined && (
-              <div className="flex flex-col flex-1 pl-3">
-                <Badge count={count} itemName={itemName} />
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              {onRename && (
-                <Button onClick={() => setIsEditing(true)}>✏️ Editar</Button>
-              )}
-              <Button
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-red-500 hover:text-red-700"
-              >
-                🗑️ Apagar
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+        </div>
+      ) : (
+        <DraggableCard
+          move={move}
+          index={index}
+          type={type}
+          key={id}
+          id={id}
+          name={name}
+          to={to}
+          onDelete={onDelete}
+          onRename={onRename}
+          icon={icon}
+          setIsEditing={setIsEditing}
+          setShowDeleteDialog={setShowDeleteDialog}
+          itemName={itemName}
+          count={count}
+        />
+      )}
       <ConfirmationDialog
         isOpen={showDeleteDialog}
         title="Confirmar"

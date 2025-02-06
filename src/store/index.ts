@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { customAlphabet } from "nanoid";
 import { Floor, Hotel } from "../types";
-import { instanceOfMachine, instanceOfSpace } from "../utils";
+import { instanceOfMachine, instanceOfRoom, instanceOfSpace } from "../utils";
 
 const generateShortId = customAlphabet(
   "abcdefghijklmnopqrstuvwxyz0123456789",
@@ -16,6 +16,7 @@ interface Store {
   addSpace: (roomId: string, name: string) => void;
   addMachineToSpace: (spaceId: string, name: string) => void;
   addMachineToRoom: (roomId: string, name: string) => void;
+  addMachineToFloor: (floorId: string, name: string) => void;
   deleteFloor: (floorId: string) => void;
   deleteRoom: (roomId: string) => void;
   deleteSpace: (spaceId: string) => void;
@@ -94,7 +95,7 @@ export const useHotelStore = create(
             floors: state.hotel.floors.map((floor) => ({
               ...floor,
               rooms: floor.rooms.map((room) =>
-                room.id === roomId
+                room.id === roomId && instanceOfRoom(room)
                   ? {
                       ...room,
                       spaces: [
@@ -120,21 +121,23 @@ export const useHotelStore = create(
               ...floor,
               rooms: floor.rooms.map((room) => ({
                 ...room,
-                spaces: room.spaces.map((space) =>
-                  space.id === spaceId && instanceOfSpace(space)
-                    ? {
-                        ...space,
-                        machines: [
-                          ...space.machines,
-                          {
-                            id: generateShortId(),
-                            name,
-                            type: "Máquina",
-                          },
-                        ],
-                      }
-                    : space,
-                ),
+                ...(instanceOfRoom(room) && {
+                  spaces: room.spaces.map((space) =>
+                    space.id === spaceId && instanceOfSpace(space)
+                      ? {
+                          ...space,
+                          machines: [
+                            ...space.machines,
+                            {
+                              id: generateShortId(),
+                              name,
+                              type: "Máquina",
+                            },
+                          ],
+                        }
+                      : space,
+                  ),
+                }),
               })),
             })),
           },
@@ -146,7 +149,7 @@ export const useHotelStore = create(
             floors: state.hotel.floors.map((floor) => ({
               ...floor,
               rooms: floor.rooms.map((room) => {
-                if (room.id === roomId) {
+                if (room.id === roomId && instanceOfRoom(room)) {
                   return {
                     ...room,
                     spaces: [
@@ -162,6 +165,28 @@ export const useHotelStore = create(
                 return room;
               }),
             })),
+          },
+        })),
+
+      addMachineToFloor: (floorId, name) =>
+        set((state) => ({
+          hotel: {
+            floors: state.hotel.floors.map((floor) => {
+              if (floor.id === floorId) {
+                return {
+                  ...floor,
+                  rooms: [
+                    ...floor.rooms,
+                    {
+                      id: generateShortId(),
+                      name,
+                      type: "Máquina",
+                    },
+                  ],
+                };
+              }
+              return floor;
+            }),
           },
         })),
 
@@ -189,7 +214,9 @@ export const useHotelStore = create(
               ...floor,
               rooms: floor.rooms.map((room) => ({
                 ...room,
-                spaces: room.spaces.filter((space) => space.id !== spaceId),
+                ...(instanceOfRoom(room) && {
+                  spaces: room.spaces.filter((space) => space.id !== spaceId),
+                }),
               })),
             })),
           },
@@ -202,16 +229,18 @@ export const useHotelStore = create(
               ...floor,
               rooms: floor.rooms.map((room) => ({
                 ...room,
-                spaces: room.spaces.map((space) => {
-                  if (instanceOfMachine(space)) {
-                    return space;
-                  }
-                  return {
-                    ...space,
-                    machines: space.machines.filter(
-                      (machine) => machine.id !== machineId,
-                    ),
-                  };
+                ...(instanceOfRoom(room) && {
+                  spaces: room.spaces.map((space) => {
+                    if (instanceOfMachine(space)) {
+                      return space;
+                    }
+                    return {
+                      ...space,
+                      machines: space.machines.filter(
+                        (machine) => machine.id !== machineId,
+                      ),
+                    };
+                  }),
                 }),
               })),
             })),
@@ -228,32 +257,38 @@ export const useHotelStore = create(
               return {
                 ...floor,
                 rooms: floor.rooms.map((room) => {
-                  if (entityType === "room" && room.id === id) {
+                  if (
+                    room.id === id &&
+                    (entityType === "room" ||
+                      (entityType === "machine" && instanceOfMachine(room)))
+                  ) {
                     return { ...room, name: newName };
                   }
                   return {
                     ...room,
-                    spaces: room.spaces.map((space) => {
-                      if (entityType === "space" && space.id === id) {
-                        return { ...space, name: newName };
-                      }
-                      if (
-                        entityType === "machine" &&
-                        instanceOfMachine(space)
-                      ) {
-                        return { ...space, name: newName };
-                      }
-                      if (instanceOfSpace(space)) {
-                        return {
-                          ...space,
-                          machines: space.machines.map((machine) =>
-                            machine.id === id && entityType === "machine"
-                              ? { ...machine, name: newName }
-                              : machine,
-                          ),
-                        };
-                      }
-                      return space;
+                    ...(instanceOfRoom(room) && {
+                      spaces: room.spaces.map((space) => {
+                        if (entityType === "space" && space.id === id) {
+                          return { ...space, name: newName };
+                        }
+                        if (
+                          entityType === "machine" &&
+                          instanceOfMachine(space)
+                        ) {
+                          return { ...space, name: newName };
+                        }
+                        if (instanceOfSpace(space)) {
+                          return {
+                            ...space,
+                            machines: space.machines.map((machine) =>
+                              machine.id === id && entityType === "machine"
+                                ? { ...machine, name: newName }
+                                : machine,
+                            ),
+                          };
+                        }
+                        return space;
+                      }),
                     }),
                   };
                 }),
@@ -313,7 +348,7 @@ export const useHotelStore = create(
           const updatedFloors = state.hotel.floors.map((floor) => ({
             ...floor,
             rooms: floor.rooms.map((room) => {
-              if (room.id !== roomId) return room;
+              if (room.id !== roomId || !instanceOfRoom(room)) return room;
               const updatedSpaces = [...room.spaces];
               const [movedSpace] = updatedSpaces.splice(fromIndex, 1);
               updatedSpaces.splice(toIndex, 0, movedSpace);
@@ -338,18 +373,20 @@ export const useHotelStore = create(
             ...floor,
             rooms: floor.rooms.map((room) => ({
               ...room,
-              spaces: room.spaces.map((space) => {
-                if (space.id === spaceId && instanceOfSpace(space)) {
-                  const updatedMachines = [...space.machines];
-                  const [movedMachine] = updatedMachines.splice(fromIndex, 1);
-                  updatedMachines.splice(toIndex, 0, movedMachine);
+              ...(instanceOfRoom(room) && {
+                spaces: room.spaces.map((space) => {
+                  if (space.id === spaceId && instanceOfSpace(space)) {
+                    const updatedMachines = [...space.machines];
+                    const [movedMachine] = updatedMachines.splice(fromIndex, 1);
+                    updatedMachines.splice(toIndex, 0, movedMachine);
 
-                  return {
-                    ...space,
-                    machines: updatedMachines,
-                  };
-                }
-                return space;
+                    return {
+                      ...space,
+                      machines: updatedMachines,
+                    };
+                  }
+                  return space;
+                }),
               }),
             })),
           }));

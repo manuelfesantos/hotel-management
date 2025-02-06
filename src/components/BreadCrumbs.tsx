@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useHotelStore } from "../store";
+import { instanceOfRoom } from "../utils";
 
 export const Breadcrumbs = () => {
   const { hotel } = useHotelStore();
@@ -17,6 +18,7 @@ export const Breadcrumbs = () => {
       case "spaces":
         return hotel.floors
           .flatMap((f) => f.rooms)
+          .filter(instanceOfRoom)
           .flatMap((r) => r.spaces)
           .find((s) => s.id === entityId);
       default:
