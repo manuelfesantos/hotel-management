@@ -3,17 +3,85 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useHotelStore } from "../store";
 
+interface TreeNodeProps {
+  node: any;
+}
+
+/**
+ * Recursive component for rendering a node in a horizontal tree style.
+ */
+const TreeNode = ({ node }: TreeNodeProps) => {
+  // Gather all possible children from different node properties.
+  const childrenNodes = [
+    ...(node.rooms || []),
+    ...(node.spaces || []),
+    ...(node.machines || []),
+  ];
+
+  return (
+    <div className="flex flex-col items-center relative">
+      {/* Node box */}
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 py-2 bg-white border rounded shadow">
+        <span className="text-2xl mb-1">
+          {node.type === "Piso"
+            ? "🏢"
+            : node.type === "Quarto"
+              ? "🚪"
+              : node.type === "Espaço"
+                ? "🗄"
+                : "⚙️"}
+        </span>
+        <div className="font-semibold text-center">
+          {node.name ?? `${node.type} ${node.id}`}
+        </div>
+      </div>
+
+      {/* Render connectors and children if any */}
+      {childrenNodes.length > 0 && (
+        <>
+          {/* Vertical line from current node to the horizontal connector */}
+          <div className="w-px h-6 bg-gray-500"></div>
+
+          {/* Horizontal line connecting all children */}
+          <div className="w-full relative flex justify-center items-center">
+            <div className="absolute top-0 w-full h-px bg-gray-500"></div>
+          </div>
+
+          {/* Row of children */}
+          <div className="flex justify-center gap-8 mt-2">
+            {childrenNodes.map((child: any) => (
+              <div
+                key={child.id}
+                className="flex flex-col items-center relative"
+              >
+                {/* Vertical line from the horizontal connector to the child */}
+                <div className="w-px h-6 bg-gray-500"></div>
+                <TreeNode node={child} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
   const { hotel } = useHotelStore();
   const treeRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  /**
+   * Generates the PDF by capturing the hidden tree container.
+   * Orientation is set to landscape.
+   */
   const generateTree = async () => {
     if (!treeRef.current) return;
     setIsGenerating(true);
 
     try {
-      const pdf = new jsPDF("portrait", "pt", "a4");
+      // Create the PDF in landscape mode
+      const pdf = new jsPDF("landscape", "pt", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
@@ -59,12 +127,10 @@ export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
           sectionHeight,
         );
 
-        if (remainingHeight > sectionHeight) {
+        remainingHeight -= sectionHeight;
+        if (remainingHeight > 0) {
           pdf.addPage();
           position += sectionHeight;
-          remainingHeight -= sectionHeight;
-        } else {
-          remainingHeight = 0;
         }
       }
 
@@ -77,100 +143,47 @@ export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const isLeaf = (node: any): boolean => {
-    const childrenNodes = [
-      ...(node.rooms || []),
-      ...(node.spaces || []),
-      ...(node.machines || []),
-    ];
-    return childrenNodes.length === 0;
-  };
-
-  const renderNode = (node: any, depth: number) => {
-    const childrenNodes = [
-      ...(node.rooms || []),
-      ...(node.spaces || []),
-      ...(node.machines || []),
-    ];
-
-    return (
-      <div className="relative">
-        <div className="flex items-center gap-2 py-2 -ml-0.5">
-          <span className="text-lg">
-            {node.type === "Piso"
-              ? "🏢"
-              : node.type === "Quarto"
-                ? "🚪"
-                : node.type === "Espaço"
-                  ? "🗄"
-                  : "⚙️"}
-          </span>
-          <div>
-            <h3 className="font-semibold">
-              {node.name ?? `${node.type} ${node.id}`}
-            </h3>
-          </div>
-        </div>
-
-        {childrenNodes.length > 0 && (
-          <div className="relative pl-6">
-            <div className="absolute left-0 top-0 h-full border-l-2"></div>
-            <div className="space-y-4">
-              {childrenNodes.map((child: any) => (
-                <div key={child.id} className="relative">
-                  <span
-                    className="absolute -left-6 w-6 border-t-2"
-                    style={{
-                      top: isLeaf(child) ? "calc(50% + 4px)" : "50%",
-                      transform: "translateY(-50%)",
-                    }}
-                  ></span>
-                  {renderNode(child, depth + 1)}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   useEffect(() => {
     generateTree();
-    return () => treeRef.current?.remove();
+    return () => {
+      if (treeRef.current) {
+        treeRef.current.remove();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
       {isGenerating && (
-        <div
-          className="fixed inset-0 flex items-center justify-center"
-          //style={{ backgroundColor: "black", opacity: 0.5 }}
-        >
-          <div className="p-4 rounded-lg">
-            Generating PDF... This may take a moment.
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="p-4 rounded-lg text-white">
+            A gerar PDF... Isto pode durar um tempinho.
           </div>
         </div>
       )}
 
       {/* Hidden container for PDF capture */}
-      <div className="fixed top-0 left-0 z-[9999]">
-        <div ref={treeRef} className="p-8 w-[1123px] min-h-[1587px]">
-          <h1 className="text-2xl font-bold mb-8">
+      <div className="fixed top-0 left-0 z-[9999] opacity-0 pointer-events-none">
+        <div
+          ref={treeRef}
+          className="p-8 min-w-[1123px] min-h-[1587px] bg-gray-50"
+        >
+          <h1 className="text-3xl font-bold mb-8 text-center">
             Estrutura de Máquinas do Hotel
           </h1>
-          <div className="h-[50px]" />
 
-          {/* Floors start at the beginning of a new page while preserving 3-column layout */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Each floor is rendered as its own tree. Adjust as necessary if you have more hierarchy. */}
+          <div className="space-y-12">
             {hotel.floors.map((floor: any, index: number) => (
               <div
                 key={floor.id}
-                className={`p-4 rounded ${
-                  index === 0 ? "" : "break-before-page"
-                }`}
+                className={`${index === 0 ? "" : "break-before-page"}`}
               >
-                {renderNode(floor, 0)}
+                <h2 className="text-2xl font-semibold text-center mb-4">
+                  {floor.name ?? `Piso ${floor.id}`}
+                </h2>
+                <TreeNode node={floor} />
               </div>
             ))}
           </div>
