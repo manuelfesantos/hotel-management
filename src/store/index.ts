@@ -273,7 +273,8 @@ export const useHotelStore = create(
                         }
                         if (
                           entityType === "machine" &&
-                          instanceOfMachine(space)
+                          instanceOfMachine(space) &&
+                          space.id === id
                         ) {
                           return { ...space, name: newName };
                         }
