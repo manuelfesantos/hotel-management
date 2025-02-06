@@ -143,15 +143,18 @@ export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
   return (
     <>
       {isGenerating && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-4 bg-white rounded-lg shadow">
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          //style={{ backgroundColor: "black", opacity: 0.5 }}
+        >
+          <div className="p-4 rounded-lg">
             Generating PDF... This may take a moment.
           </div>
         </div>
       )}
 
       {/* Hidden container for PDF capture */}
-      <div className="fixed top-0 left-0 z-[9999] opacity-0">
+      <div className="fixed top-0 left-0 z-[9999]">
         <div ref={treeRef} className="p-8 w-[1123px] min-h-[1587px]">
           <h1 className="text-2xl font-bold mb-8">
             Estrutura de Máquinas do Hotel
@@ -163,7 +166,7 @@ export const TreeDiagram = ({ onClose }: { onClose: () => void }) => {
             {hotel.floors.map((floor: any, index: number) => (
               <div
                 key={floor.id}
-                className={`p-4 shadow rounded ${
+                className={`p-4 rounded ${
                   index === 0 ? "" : "break-before-page"
                 }`}
               >
