@@ -5,5 +5,5 @@ export const PageLayout = ({
 }: {
   children: ReactNode | ReactNode[];
 }) => {
-  return <div className={"p-4 h-full flex flex-col gap-10"}>{children}</div>;
+  return <div className={"p-4 h-full flex flex-col gap-2"}>{children}</div>;
 };

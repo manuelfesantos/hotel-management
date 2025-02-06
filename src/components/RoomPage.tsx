@@ -1,14 +1,23 @@
 import { Link, useParams } from "react-router-dom";
-import { SpaceNameEnum, useHotelStore } from "../hooks/HotelStore.tsx";
-import { EntityCard } from "./EntityCard";
-import { Breadcrumbs } from "./BreadCrumbs.tsx";
+import { useHotelStore } from "../store";
 import { Button } from "./Button.tsx";
 import { CardList } from "./CardList.tsx";
 import { PageLayout } from "./PageLayout.tsx";
+import { Header } from "./Header.tsx";
+import { DraggableCard } from "./DraggableCard.tsx";
+import { instanceOfMachine, instanceOfSpace } from "../utils";
+import { ItemTypeEnum } from "../types";
 
 export const RoomPage = () => {
   const { floorId, roomId } = useParams<{ floorId: string; roomId: string }>();
-  const { hotel, addSpace, deleteSpace, renameEntity } = useHotelStore();
+  const {
+    hotel,
+    addSpace,
+    deleteSpace,
+    updateSpaceOrder,
+    addMachineToRoom,
+    renameEntity,
+  } = useHotelStore();
 
   const room = hotel.floors
     .flatMap((floor) => floor.rooms)
@@ -20,55 +29,83 @@ export const RoomPage = () => {
     floor.rooms.some((room) => room.id === roomId),
   );
 
+  const moveSpace = (fromIndex: number, toIndex: number) => {
+    updateSpaceOrder(roomId!, fromIndex, toIndex);
+  };
+
   return (
     <PageLayout>
-      <Breadcrumbs />
+      <Header />
       <div className="flex w-full items-center gap-4 mb-4 px-4">
         {parentFloor && (
           <Link
             to={`/floors/${parentFloor.id}`}
             className="text-blue-500 hover:text-blue-700 flex items-center"
           >
-            ← Voltar a {"Piso " + parentFloor.id}
+            ← Voltar a {parentFloor.name}
           </Link>
         )}
         <div className="flex flex-1 justify-between items-center mb-4">
-          <h1 className="text-2xl">{"Quarto " + room.id}</h1>
+          <h1 className="text-2xl">{room.name}</h1>
           <div className={"flex gap-4"}>
-            {Object.keys(SpaceNameEnum).map((key) => (
-              <Button
-                onClick={() =>
-                  addSpace(
-                    roomId!,
-                    SpaceNameEnum[key as keyof typeof SpaceNameEnum],
-                  )
-                }
-                disabled={room.spaces.some(
-                  (space) =>
-                    space.name ===
-                    SpaceNameEnum[key as keyof typeof SpaceNameEnum],
-                )}
-              >
-                Adicionar {SpaceNameEnum[key as keyof typeof SpaceNameEnum]}
-              </Button>
-            ))}
+            <Button
+              onClick={() =>
+                addSpace(
+                  roomId!,
+                  "Espaço " + (room.spaces.filter(instanceOfSpace).length + 1),
+                )
+              }
+              className="bg-green-700 text-white p-2 rounded hover:bg-green-800"
+            >
+              Adicionar Espaço
+            </Button>
+            <Button
+              onClick={() =>
+                addMachineToRoom(
+                  roomId!,
+                  "Máquina " +
+                    (room.spaces.filter(instanceOfMachine).length + 1),
+                )
+              }
+              className="bg-green-700 text-white p-2 rounded hover:bg-green-800"
+            >
+              Adicionar Máquina
+            </Button>
           </div>
         </div>
       </div>
 
       <CardList>
-        {room.spaces.map((space) => (
-          <EntityCard
-            key={space.id}
-            id={space.id}
-            name={space.name}
-            count={space.machines.length}
-            itemName={"Máquina"}
-            to={`/floors/${floorId}/rooms/${room.id}/spaces/${space.id}`}
-            onDelete={() => deleteSpace(space.id)}
-            onRename={(newName) => renameEntity("space", space.id, newName)}
-          />
-        ))}
+        {room.spaces.map((space, index) =>
+          instanceOfSpace(space) ? (
+            <DraggableCard
+              type={ItemTypeEnum.SPACE}
+              index={index}
+              move={moveSpace}
+              key={space.id}
+              id={space.id}
+              name={space.name}
+              count={space.machines.length}
+              itemName={"Máquina"}
+              to={`/floors/${floorId}/rooms/${room.id}/spaces/${space.id}`}
+              onDelete={() => deleteSpace(space.id)}
+              onRename={(newName) => renameEntity("space", space.id, newName)}
+              icon={"🗄"}
+            />
+          ) : (
+            <DraggableCard
+              index={index}
+              move={moveSpace}
+              onDelete={() => deleteSpace(space.id)}
+              to={""}
+              id={space.id}
+              name={space.name}
+              type={ItemTypeEnum.SPACE}
+              onRename={(newName) => renameEntity("machine", space.id, newName)}
+              icon={"⚙️"}
+            />
+          ),
+        )}
       </CardList>
     </PageLayout>
   );

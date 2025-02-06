@@ -17,7 +17,7 @@ export const ConfirmationDialog = ({
 
   return (
     <div className="fixed inset-0 bg-[#000000C3] z-40 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+      <div className="bg-white p-6 rounded-lg max-w-sm w-full m-6">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="mb-4">{message}</p>
         <div className="flex justify-end gap-2">

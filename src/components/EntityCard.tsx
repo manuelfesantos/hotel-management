@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConfirmationDialog } from "./ConfirmationDialog.tsx";
 import { Button } from "./Button.tsx";
 import { Badge } from "./Badge.tsx";
@@ -11,7 +11,8 @@ interface EntityCardProps {
   count?: number;
   itemName?: string;
   onDelete: () => void;
-  onRename: (newName: string) => void;
+  onRename?: (newName: string) => void;
+  icon: string;
 }
 
 export const EntityCard = ({
@@ -21,29 +22,40 @@ export const EntityCard = ({
   itemName,
   onRename,
   count,
+  icon,
 }: EntityCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(name);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleRename = () => {
-    onRename(newName);
+    onRename?.(newName);
     setIsEditing(false);
   };
 
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
   return (
     <>
-      <div className="relative w-full flex items-center justify-between bg-white p-4 shadow-sm rounded-md hover:shadow-md transition-all">
+      <div
+        className={`relative w-full flex items-center justify-between bg-white p-4 shadow-sm rounded-md hover:shadow-md transition-all`}
+      >
         {isEditing ? (
-          <div className="w-full flex items-center bg-white">
+          <div className="w-full flex gap-3 items-center bg-white">
             <input
               value={newName}
+              ref={inputRef}
               onChange={(e) => setNewName(e.target.value)}
               className="border p-2 flex-1 rounded-md"
               onBlur={handleRename}
               onKeyDown={(e) => e.key === "Enter" && handleRename()}
             />
-            <Button onClick={handleRename}>Save</Button>
+            <Button onClick={handleRename}>Guardar</Button>
           </div>
         ) : (
           <>
@@ -52,7 +64,7 @@ export const EntityCard = ({
                 to={to}
                 className="text-lg font-medium text-gray-900 hover:text-blue-600"
               >
-                {name}
+                {icon} {name}
               </Link>
             </div>
             {count !== undefined && (
@@ -61,12 +73,9 @@ export const EntityCard = ({
               </div>
             )}
             <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                ✏️ Editar
-              </Button>
+              {onRename && (
+                <Button onClick={() => setIsEditing(true)}>✏️ Editar</Button>
+              )}
               <Button
                 onClick={() => setShowDeleteDialog(true)}
                 className="text-red-500 hover:text-red-700"

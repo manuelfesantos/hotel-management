@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useHotelStore } from "../hooks/HotelStore";
+import { useHotelStore } from "../store";
 
 export const Breadcrumbs = () => {
   const { hotel } = useHotelStore();
@@ -35,10 +35,7 @@ export const Breadcrumbs = () => {
         const entity = getEntity(entityType, entityId);
         if (entity) {
           acc.push({
-            name:
-              entity.type +
-              " " +
-              (["Quarto", "Piso"].includes(entity.type) ? entity.id : ""),
+            name: entity.name,
             path: path,
           });
         }
